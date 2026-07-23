@@ -47,6 +47,9 @@ make ps         # all services should report (healthy)
 ```
 
 See [`docs/RUN.md`](docs/RUN.md) for the full walkthrough including Docker install.
+See [`docs/WORKLOG.md`](docs/WORKLOG.md) for a full log of an actual deployment run —
+every command, the two healthcheck bugs found and fixed, and how the screenshots
+below were captured.
 
 ## Verify
 
@@ -98,3 +101,6 @@ Captured from a real run of the stand.
 
 **Uptime Kuma with a live monitor green**
 ![kuma dashboard](docs/screenshots/kuma-dashboard.png)
+
+**Final verification — `compose ps`, `/healthz`, registry catalog**
+![final verification](docs/screenshots/final-verification.png)
