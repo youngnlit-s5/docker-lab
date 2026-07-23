@@ -57,6 +57,20 @@ docker tag alpine:3.20 registry.lab.local/alpine:3.20
 docker push registry.lab.local/alpine:3.20
 ```
 
+## Known issues found & fixed
+
+Standing this up end-to-end (Docker install → certs → `compose up` → push) surfaced
+two healthcheck bugs in `docker-compose.yml` — both showed the affected service stuck
+`unhealthy` in `docker compose ps` even though it worked fine otherwise:
+
+- **`proxy`**: the healthcheck hit `http://localhost/healthz`, but `localhost`
+  resolves to `::1` first inside the container while nginx only binds `0.0.0.0` —
+  every probe failed with "connection refused". Fixed by probing `127.0.0.1` instead.
+- **`registry`**: the healthcheck hit `/v2/` with no credentials, but once
+  `REGISTRY_AUTH=htpasswd` is set that endpoint requires Basic Auth — every probe got
+  401. Fixed by sending the same `ilija-s` / `change-me` credentials as an
+  `Authorization` header.
+
 ## Backups
 
 The `backup` container archives `kuma-data` and `registry-data` once every `INTERVAL`
@@ -71,4 +85,11 @@ seconds (24h by default) into `backup/out/*.tar.gz` and prunes anything older th
 
 ## Screenshots
 
-Live screenshots from the running stand live in [`docs/screenshots/`](docs/screenshots/).
+Captured from a real run of the stand — see [`docs/screenshots/`](docs/screenshots/):
+
+| File | Shows |
+|---|---|
+| [`docker-version.png`](docs/screenshots/docker-version.png) | `docker --version && docker compose version` |
+| [`compose-ps.png`](docs/screenshots/compose-ps.png) | `docker compose ps` — all four services `healthy` |
+| [`registry-push.png`](docs/screenshots/registry-push.png) | `docker login` + `tag` + `push` of `alpine:3.20` to the private registry |
+| [`kuma-dashboard.png`](docs/screenshots/kuma-dashboard.png) | Uptime Kuma with a live monitor green |
