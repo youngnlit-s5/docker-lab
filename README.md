@@ -85,11 +85,16 @@ seconds (24h by default) into `backup/out/*.tar.gz` and prunes anything older th
 
 ## Screenshots
 
-Captured from a real run of the stand — see [`docs/screenshots/`](docs/screenshots/):
+Captured from a real run of the stand.
 
-| File | Shows |
-|---|---|
-| [`docker-version.png`](docs/screenshots/docker-version.png) | `docker --version && docker compose version` |
-| [`compose-ps.png`](docs/screenshots/compose-ps.png) | `docker compose ps` — all four services `healthy` |
-| [`registry-push.png`](docs/screenshots/registry-push.png) | `docker login` + `tag` + `push` of `alpine:3.20` to the private registry |
-| [`kuma-dashboard.png`](docs/screenshots/kuma-dashboard.png) | Uptime Kuma with a live monitor green |
+**`docker --version && docker compose version`**
+![docker version](docs/screenshots/docker-version.png)
+
+**`docker compose ps` — all four services `healthy`**
+![compose ps](docs/screenshots/compose-ps.png)
+
+**`docker login` + `tag` + `push` of `alpine:3.20` to the private registry**
+![registry push](docs/screenshots/registry-push.png)
+
+**Uptime Kuma with a live monitor green**
+![kuma dashboard](docs/screenshots/kuma-dashboard.png)
