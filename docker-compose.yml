@@ -1,0 +1,84 @@
+services:
+  # ---- Reverse proxy: single entry point for all web services ----
+  proxy:
+    image: nginx:1.27-alpine
+    container_name: proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+    depends_on:
+      - kuma
+      - registry
+    networks:
+      - web
+    healthcheck:
+      # "localhost" resolves to ::1 first inside the container; nginx only
+      # binds 0.0.0.0, so that lookup order caused a false-unhealthy status.
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ---- Uptime Kuma: status page / monitoring ----
+  kuma:
+    image: louislam/uptime-kuma:1
+    container_name: kuma
+    restart: unless-stopped
+    volumes:
+      - kuma-data:/app/data
+    networks:
+      - web
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:3001/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ---- Private Docker registry ----
+  registry:
+    image: registry:2
+    container_name: registry
+    restart: unless-stopped
+    environment:
+      REGISTRY_STORAGE_DELETE_ENABLED: "true"
+      REGISTRY_AUTH: htpasswd
+      REGISTRY_AUTH_HTPASSWD_REALM: "Registry Realm"
+      REGISTRY_AUTH_HTPASSWD_PATH: /auth/htpasswd
+    volumes:
+      - registry-data:/var/lib/registry
+      - ./nginx/certs/htpasswd:/auth/htpasswd:ro
+    networks:
+      - web
+    healthcheck:
+      # /v2/ requires basic auth once REGISTRY_AUTH=htpasswd is set, so the
+      # probe must send the same credentials as the registry's own htpasswd
+      # file (ilija-s / change-me) or it always gets 401 -> unhealthy.
+      test: ["CMD", "wget", "-qO-", "--header=Authorization: Basic aWxpamEtczpjaGFuZ2UtbWU=", "http://127.0.0.1:5000/v2/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ---- Backup: nightly tar of named volumes to ./backup/out ----
+  backup:
+    image: alpine:3.20
+    container_name: backup
+    restart: unless-stopped
+    volumes:
+      - kuma-data:/data/kuma:ro
+      - registry-data:/data/registry:ro
+      - ./backup:/backup
+    entrypoint: ["/bin/sh", "/backup/backup.sh"]
+    networks:
+      - web
+
+networks:
+  web:
+    driver: bridge
+
+volumes:
+  kuma-data:
+  registry-data:

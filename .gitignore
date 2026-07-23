@@ -1,0 +1,4 @@
+.env
+nginx/certs/
+backup/out/
+*.log
